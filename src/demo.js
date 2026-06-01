@@ -8,7 +8,10 @@ function parseArgs() {
   return new Set(process.argv.slice(2));
 }
 
-function pickCheapestPaidBaseProduct(products) {
+function pickPaymentCompatibleSeedProduct(products) {
+  const preferred = products.find((product) => product.product_id === "pragma-signal-snapshot");
+  if (preferred) return preferred;
+
   return products
     .filter((product) => product.network === "base")
     .filter((product) => product.asset === "USDC")
@@ -60,7 +63,7 @@ async function main() {
   }
 
   const catalog = await catalogResponse.json();
-  const product = pickCheapestPaidBaseProduct(catalog.products ?? []);
+  const product = pickPaymentCompatibleSeedProduct(catalog.products ?? []);
   if (!product) {
     throw new Error("No paid Base USDC product found in Pyrimid catalog.");
   }
@@ -120,7 +123,7 @@ async function main() {
       body
     },
     payment_requirement: paymentRequirement,
-    next_step: "Fund a burner Base wallet, make the x402 payment, retry with X-PAYMENT or X-PAYMENT-TX, then add the Base transaction hash to this evidence."
+    next_step: "Open payment-helper.html, connect a self-custody Base wallet, approve USDC, call PyrimidRouter.routePayment, retry with X-PAYMENT-TX, then add the Base transaction hash to this evidence."
   };
 
   await writeFile("artifacts/dry-run-evidence.json", `${JSON.stringify(evidence, null, 2)}\n`);

@@ -1,0 +1,258 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Pyrimid Buyer Payment Helper</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --bg: #f7f8fb;
+      --panel: #ffffff;
+      --text: #1b1f24;
+      --muted: #657080;
+      --line: #d9dee7;
+      --accent: #1267d8;
+      --accent-strong: #0a4ea8;
+      --ok: #147c43;
+      --warn: #9a6700;
+      --bad: #b42318;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: Arial, Helvetica, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      display: grid;
+      place-items: center;
+      padding: 24px;
+    }
+    main {
+      width: min(720px, 100%);
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 24px;
+      box-shadow: 0 12px 40px rgba(16, 24, 40, .08);
+    }
+    h1 {
+      font-size: 22px;
+      margin: 0 0 8px;
+      letter-spacing: 0;
+    }
+    p { color: var(--muted); line-height: 1.5; }
+    .grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      margin: 18px 0;
+    }
+    .field {
+      border: 1px solid var(--line);
+      border-radius: 6px;
+      padding: 12px;
+      min-width: 0;
+    }
+    .label {
+      color: var(--muted);
+      font-size: 12px;
+      margin-bottom: 6px;
+    }
+    .value {
+      font-family: Consolas, monospace;
+      font-size: 13px;
+      overflow-wrap: anywhere;
+    }
+    button {
+      border: 0;
+      border-radius: 6px;
+      background: var(--accent);
+      color: white;
+      font-size: 16px;
+      font-weight: 700;
+      padding: 12px 16px;
+      cursor: pointer;
+      margin-right: 8px;
+      margin-top: 8px;
+    }
+    button:hover { background: var(--accent-strong); }
+    button:disabled {
+      background: #a9b6c8;
+      cursor: not-allowed;
+    }
+    pre {
+      white-space: pre-wrap;
+      overflow-wrap: anywhere;
+      background: #101828;
+      color: #e6edf7;
+      border-radius: 6px;
+      padding: 14px;
+      min-height: 96px;
+      line-height: 1.45;
+    }
+    .ok { color: var(--ok); }
+    .warn { color: var(--warn); }
+    .bad { color: var(--bad); }
+    @media (max-width: 680px) {
+      .grid { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <h1>Pyrimid Buyer Payment Helper</h1>
+    <p>
+      This page makes the real Base USDC purchase for the Pyrimid buyer-agent demo.
+      It uses your browser wallet only for signing. Never paste a private key or seed phrase here.
+    </p>
+
+    <div class="grid">
+      <div class="field">
+        <div class="label">Product</div>
+        <div class="value">pragma-signal-snapshot</div>
+      </div>
+      <div class="field">
+        <div class="label">Price</div>
+        <div class="value">0.25 USDC on Base</div>
+      </div>
+      <div class="field">
+        <div class="label">Router</div>
+        <div class="value">0xc949AEa380D7b7984806143ddbfE519B03ABd68B</div>
+      </div>
+      <div class="field">
+        <div class="label">Vendor/Product IDs</div>
+        <div class="value">0x03151ef1da0ab3edeb941a890e6cbc75 / 1</div>
+      </div>
+    </div>
+
+    <button id="connect">Connect Wallet</button>
+    <button id="pay" disabled>Approve And Pay</button>
+
+    <p id="status" class="warn">Waiting for wallet connection.</p>
+    <pre id="log"></pre>
+  </main>
+
+  <script src="https://cdn.jsdelivr.net/npm/ethers@6.13.4/dist/ethers.umd.min.js"></script>
+  <script>
+    const BASE_CHAIN_ID_HEX = '0x2105';
+    const BASE_PARAMS = {
+      chainId: BASE_CHAIN_ID_HEX,
+      chainName: 'Base',
+      nativeCurrency: { name: 'Ether', symbol: 'ETH', decimals: 18 },
+      rpcUrls: ['https://mainnet.base.org'],
+      blockExplorerUrls: ['https://basescan.org'],
+    };
+
+    const USDC = '0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913';
+    const ROUTER = '0xc949AEa380D7b7984806143ddbfE519B03ABd68B';
+    const VENDOR_ID = '0x03151ef1da0ab3edeb941a890e6cbc75';
+    const PRODUCT_ID = 1n;
+    const AMOUNT = 250000n;
+    const ZERO_AFFILIATE = '0x00000000000000000000000000000000';
+
+    const erc20Abi = [
+      'function balanceOf(address) view returns (uint256)',
+      'function allowance(address owner,address spender) view returns (uint256)',
+      'function approve(address spender,uint256 value) returns (bool)'
+    ];
+    const routerAbi = [
+      'function routePayment(bytes16 vendorId,uint256 productId,bytes16 affiliateId,address buyer,uint256 maxPrice)'
+    ];
+
+    let provider;
+    let signer;
+    let account;
+
+    const statusEl = document.getElementById('status');
+    const logEl = document.getElementById('log');
+    const connectBtn = document.getElementById('connect');
+    const payBtn = document.getElementById('pay');
+
+    function log(line) {
+      logEl.textContent += `${line}\n`;
+    }
+
+    function setStatus(text, klass) {
+      statusEl.textContent = text;
+      statusEl.className = klass || '';
+    }
+
+    async function switchToBase() {
+      try {
+        await window.ethereum.request({ method: 'wallet_switchEthereumChain', params: [{ chainId: BASE_CHAIN_ID_HEX }] });
+      } catch (error) {
+        if (error.code === 4902) {
+          await window.ethereum.request({ method: 'wallet_addEthereumChain', params: [BASE_PARAMS] });
+        } else {
+          throw error;
+        }
+      }
+    }
+
+    connectBtn.onclick = async () => {
+      logEl.textContent = '';
+      if (!window.ethereum) {
+        setStatus('No browser wallet found. Install MetaMask, Rabby, OKX Wallet, or Coinbase Wallet extension.', 'bad');
+        return;
+      }
+
+      await switchToBase();
+      provider = new ethers.BrowserProvider(window.ethereum);
+      const accounts = await provider.send('eth_requestAccounts', []);
+      account = accounts[0];
+      signer = await provider.getSigner();
+
+      const usdc = new ethers.Contract(USDC, erc20Abi, provider);
+      const balance = await usdc.balanceOf(account);
+      const ethBalance = await provider.getBalance(account);
+
+      log(`Wallet: ${account}`);
+      log(`Base ETH gas balance: ${ethers.formatEther(ethBalance)} ETH`);
+      log(`USDC balance: ${ethers.formatUnits(balance, 6)} USDC`);
+
+      if (balance < AMOUNT) {
+        setStatus('USDC is not enough. Fund this same wallet with at least 0.25 Base USDC plus a little Base ETH for gas.', 'bad');
+        return;
+      }
+      if (ethBalance === 0n) {
+        setStatus('No Base ETH for gas. Add a tiny amount of Base ETH to this same wallet.', 'bad');
+        return;
+      }
+
+      setStatus('Wallet ready. Click Approve And Pay.', 'ok');
+      payBtn.disabled = false;
+    };
+
+    payBtn.onclick = async () => {
+      payBtn.disabled = true;
+      try {
+        const usdc = new ethers.Contract(USDC, erc20Abi, signer);
+        const router = new ethers.Contract(ROUTER, routerAbi, signer);
+        const allowance = await usdc.allowance(account, ROUTER);
+        log(`Current allowance: ${ethers.formatUnits(allowance, 6)} USDC`);
+
+        if (allowance < AMOUNT) {
+          setStatus('Waiting for USDC approve confirmation in wallet...', 'warn');
+          const approveTx = await usdc.approve(ROUTER, AMOUNT);
+          log(`Approve tx: ${approveTx.hash}`);
+          await approveTx.wait();
+          log('Approve confirmed.');
+        }
+
+        setStatus('Waiting for routePayment confirmation in wallet...', 'warn');
+        const payTx = await router.routePayment(VENDOR_ID, PRODUCT_ID, ZERO_AFFILIATE, account, AMOUNT);
+        log(`Payment tx: ${payTx.hash}`);
+        log(`BaseScan: https://basescan.org/tx/${payTx.hash}`);
+        await payTx.wait();
+        setStatus('Payment confirmed. Send this Payment tx hash to Codex.', 'ok');
+      } catch (error) {
+        console.error(error);
+        setStatus(error?.shortMessage || error?.message || 'Payment failed.', 'bad');
+        payBtn.disabled = false;
+      }
+    };
+  </script>
+</body>
+</html>

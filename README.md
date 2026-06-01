@@ -7,11 +7,11 @@ This is a reproducible demo for MYA job #22:
 ## What this demo does
 
 1. Fetches the Pyrimid seed catalog.
-2. Picks the cheapest paid Base USDC product.
+2. Picks a payment-compatible Pyrimid seed product.
 3. Calls the endpoint without payment and records the `HTTP 402 Payment Required` response.
 4. Saves evidence in `artifacts/`.
 
-The payment step is intentionally not automatic by default. It requires a Base wallet with a tiny amount of USDC and ETH for gas. Do not paste a main-wallet private key here.
+The payment step is intentionally not automatic by default. It requires a self-custody Base wallet with a tiny amount of USDC and ETH for gas. Do not paste a private key or seed phrase anywhere.
 
 ## Current payout wallet
 
@@ -26,4 +26,4 @@ npm run check
 
 ## Payment step
 
-Use a fresh burner wallet funded with the minimum needed for the selected product and gas, then run a payment-enabled variant after review.
+Open `payment-helper.html` with a browser wallet, then approve USDC and confirm `PyrimidRouter.routePayment`. Exchange withdrawals or ordinary USDC transfers to the router do not count as payment proof.
