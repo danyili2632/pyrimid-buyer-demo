@@ -1,0 +1,16 @@
+{
+  "name": "danyili2632-pyrimid-buyer-demo",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "demo": "node src/demo.js",
+    "check": "node src/demo.js --dry-run",
+    "submit:dry": "node src/submit.js --dry-run"
+  },
+  "dependencies": {
+    "@x402/fetch": "^2.14.0",
+    "@x402/evm": "^2.14.0",
+    "viem": "^2.48.11"
+  }
+}

@@ -1,0 +1,94 @@
+{
+  "job": {
+    "id": 22,
+    "title": "Pyrimid bounty: buyer-agent purchase demo"
+  },
+  "actor": {
+    "github": "danyili2632",
+    "payout": {
+      "network": "base",
+      "asset": "USDC",
+      "wallet": "0x6CBF4b5cb88b8C2B7af776Bc2B073163B5d3C08A"
+    }
+  },
+  "mode": "dry-run-no-payment",
+  "timestamp": "2026-06-01T17:41:27.359Z",
+  "catalog": {
+    "url": "https://pyrimid.ai/api/v1/catalog?source=pyrimid-seed",
+    "product_count": 50
+  },
+  "selected_product": {
+    "product_id": "agentzone-trust-search",
+    "vendor_id": "agentzone",
+    "vendor_name": "AgentZone",
+    "endpoint": "https://pyrimid.ai/api/v1/paid/agentzone-search?q=agent-commerce",
+    "method": "GET",
+    "price_display": "$0.05",
+    "price_usdc": 50000,
+    "affiliate_bps": 2500,
+    "network": "base",
+    "asset": "USDC"
+  },
+  "unpaid_request": {
+    "status": 402,
+    "status_text": "Payment Required",
+    "headers": {
+      "access-control-allow-headers": "Content-Type, X-Affiliate-ID",
+      "access-control-allow-methods": "GET, OPTIONS",
+      "access-control-allow-origin": "*",
+      "age": "0",
+      "cache-control": "no-store",
+      "content-type": "application/json",
+      "date": "Mon, 01 Jun 2026 17:41:39 GMT",
+      "server": "Vercel",
+      "strict-transport-security": "max-age=63072000",
+      "transfer-encoding": "chunked",
+      "vary": "rsc, next-router-state-tree, next-router-prefetch, next-router-segment-prefetch",
+      "x-matched-path": "/api/v1/paid/agentzone-search",
+      "x-payment-required": "{\"x402Version\":2,\"scheme\":\"exact\",\"network\":\"base\",\"asset\":\"USDC\",\"maxAmountRequired\":\"0.05\",\"payTo\":\"0xc949AEa380D7b7984806143ddbfE519B03ABd68B\",\"resource\":\"https://pyrimid.ai/api/v1/paid/agentzone-search?q=agent-commerce\",\"description\":\"AgentZone trusted agent search routed through Pyrimid\",\"mimeType\":\"application/json\",\"vendorId\":\"agentzone\",\"productId\":\"agentzone-trust-search\",\"affiliateBps\":2500,\"protocol\":\"pyrimid\"}",
+      "x-pyrimid-network": "base",
+      "x-pyrimid-product": "agentzone-trust-search",
+      "x-pyrimid-vendor": "agentzone",
+      "x-vercel-cache": "MISS",
+      "x-vercel-id": "hnd1::iad1::d8kzx-1780335699210-3f6f03e77103"
+    },
+    "body": {
+      "error": "payment_required",
+      "message": "Pay 0.05 USDC on Base through Pyrimid, then retry with X-PAYMENT or X-PAYMENT-TX.",
+      "accepts": [
+        {
+          "x402Version": 2,
+          "scheme": "exact",
+          "network": "base",
+          "asset": "USDC",
+          "maxAmountRequired": "0.05",
+          "payTo": "0xc949AEa380D7b7984806143ddbfE519B03ABd68B",
+          "resource": "https://pyrimid.ai/api/v1/paid/agentzone-search?q=agent-commerce",
+          "description": "AgentZone trusted agent search routed through Pyrimid",
+          "mimeType": "application/json",
+          "vendorId": "agentzone",
+          "productId": "agentzone-trust-search",
+          "affiliateBps": 2500,
+          "protocol": "pyrimid"
+        }
+      ],
+      "docs": "https://pyrimid.ai/quickstart"
+    }
+  },
+  "payment_requirement": {
+    "x402Version": 2,
+    "scheme": "exact",
+    "network": "base",
+    "asset": "USDC",
+    "maxAmountRequired": "0.05",
+    "payTo": "0xc949AEa380D7b7984806143ddbfE519B03ABd68B",
+    "resource": "https://pyrimid.ai/api/v1/paid/agentzone-search?q=agent-commerce",
+    "description": "AgentZone trusted agent search routed through Pyrimid",
+    "mimeType": "application/json",
+    "vendorId": "agentzone",
+    "productId": "agentzone-trust-search",
+    "affiliateBps": 2500,
+    "protocol": "pyrimid"
+  },
+  "next_step": "Fund a burner Base wallet, make the x402 payment, retry with X-PAYMENT or X-PAYMENT-TX, then add the Base transaction hash to this evidence."
+}
